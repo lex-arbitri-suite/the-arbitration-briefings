@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "noImplicitReturns": true,
+    "noUnusedLocals": false,
+    "outDir": "lib",
+    "rootDir": "..",
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2022",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true
+  },
+  "include": [
+    "index.ts",
+    "urlLiveness.ts",
+    "mergeGate.ts",
+    "providers/types.ts",
+    "providers/retry.ts",
+    "providers/gemini.ts",
+    "providers/openaiCompat.ts",
+    "providers/registry.ts",
+    "../src/prompts/shared.ts",
+    "../src/utils/approvedSources.ts",
+    "../src/constants.ts"
+  ],
+  "exclude": ["node_modules", "lib"]
+}

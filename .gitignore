@@ -1,0 +1,20 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+npm-debug.log*
+.env*
+!.env.example
+.vscode/
+.firebase/
+firebase-applet-config.json
+claude md files/
+spike/
+
+# Internal CLI context bundle (repo is public — keep internal material untracked)
+CLAUDE.md
+.context/
+.cursorrules
+

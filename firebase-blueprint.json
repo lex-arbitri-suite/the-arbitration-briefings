@@ -1,0 +1,127 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user identity, authorisation status, and session management information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "editor", "user"] },
+        "authorised": { "type": "boolean", "description": "Whether the user is authorised to access the workspace." },
+        "expiresAt": { "type": "string", "format": "date-time", "description": "Timestamp when access expires. Null for permanent access." },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "authorised"]
+    },
+    "Allowlist": {
+      "title": "Authorised Email Allowlist",
+      "description": "A list of pre-approved emails for platform access.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "expiresAt": { "type": "string", "format": "date-time", "description": "Optional expiration date for access." },
+        "addedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "addedAt"]
+    },
+    "AccessRequest": {
+      "title": "Access Request Form",
+      "description": "Requests for platform access from unauthenticated users.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "chambers": { "type": "string" },
+        "submittedAt": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["pending", "approved", "denied"] }
+      },
+      "required": ["name", "email", "chambers", "submittedAt", "status"]
+    },
+    "Briefing": {
+      "title": "Research Briefing",
+      "description": "A curated legal briefing or a user's research session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "userId": { "type": "string", "description": "The owner of the briefing" },
+        "isArchived": { "type": "boolean" },
+        "status": { "type": "string", "enum": ["ephemeral", "approved", "authorised"] },
+        "visibility": { "type": "string", "enum": ["public", "private"] },
+        "commentary": { "type": "string" },
+        "internalRef": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "authorisedAt": { "type": "string", "format": "date-time" },
+        "previewText": { "type": "string" },
+        "deletedAt": { "type": "number" },
+        "category": { "type": "string", "enum": ["Jurisprudence", "Legislation", "Procedural", "General"] },
+        "parentChatIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "generatedBriefingIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["title", "userId", "updatedAt"]
+    },
+    "Message": {
+      "title": "Briefing Message",
+      "description": "A single message within a briefing.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "assistant"] },
+        "content": { "type": "string" },
+        "isError": { "type": "boolean" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["id", "role", "content"]
+    },
+    "Development": {
+      "title": "Latest Development",
+      "description": "A curated legal development in international arbitration.",
+      "type": "object",
+      "properties": {
+        "category": { "type": "string" },
+        "title": { "type": "string" },
+        "date": { "type": "string" },
+        "type": { "type": "string", "enum": ["commercial", "investment"] },
+        "summary": { "type": "string" },
+        "query": { "type": "string" },
+        "sourceUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["category", "title", "date", "type", "summary", "query", "sourceUrl"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents."
+    },
+    "/briefings/{briefingId}": {
+      "schema": "Briefing",
+      "description": "Collection of all briefings, both private and public."
+    },
+    "/briefings/{briefingId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Messages within a briefing."
+    },
+    "/developments/{devId}": {
+      "schema": "Development",
+      "description": "Curated latest developments."
+    },
+    "/allowlist/{email}": {
+      "schema": "Allowlist",
+      "description": "Authorised email allowlist."
+    },
+    "/accessRequests/{requestId}": {
+      "schema": "AccessRequest",
+      "description": "Requests for platform access."
+    }
+  }
+}

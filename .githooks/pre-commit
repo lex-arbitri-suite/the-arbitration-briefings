@@ -1,0 +1,54 @@
+#!/bin/sh
+#
+# pre-commit — run the offline test suites before a commit is recorded.
+#
+# Versioned deliberately. An earlier copy of this hook lived in .git/hooks/,
+# which git never clones, so a fresh clone silently dropped the gate and the
+# first anyone would know of it is a bad commit that sailed through. Keeping
+# the hook in the tree and pointing git at it via core.hooksPath removes that
+# scheduled expiry: `npm install` runs the `prepare` script in package.json,
+# which sets core.hooksPath to this directory.
+#
+# Offline suites only (~9s). The real-network canary is deliberately excluded —
+# a source site having a bad day must never block a commit. Run it deliberately
+# with `npm run canary`.
+#
+# Bypass with `git commit --no-verify` when a red test is genuinely unrelated
+# to what you are committing. If an agent bypasses it, it should say so.
+
+# Only run when code the suites cover is actually staged.
+if ! git diff --cached --name-only --diff-filter=ACMR |
+     grep -Eq '^(src/|functions/)|package\.json$'; then
+  exit 0
+fi
+
+# Dependencies may not be installed yet — on a fresh clone, or in a checkout
+# used only for reading. Skip rather than block: a hook that fails on a machine
+# that was never set up to run tests teaches people to pass --no-verify by
+# reflex, which costs more than the check is worth.
+if [ ! -d functions/node_modules ]; then
+  echo "pre-commit: functions/node_modules missing — skipping tests."
+  echo "            run 'npm install && npm --prefix functions install' to enable them."
+  exit 0
+fi
+
+echo "pre-commit: running offline test suites…"
+
+LOG="$(mktemp -t briefings-pre-commit)"
+
+if ! npm test >"$LOG" 2>&1; then
+  echo ""
+  echo "  COMMIT REFUSED — the offline test suites failed."
+  echo ""
+  tail -25 "$LOG"
+  echo ""
+  echo "  Full output: $LOG"
+  echo "  Re-run with: npm test"
+  echo "  Bypass with: git commit --no-verify"
+  echo ""
+  exit 1
+fi
+
+rm -f "$LOG"
+echo "pre-commit: tests passed."
+exit 0

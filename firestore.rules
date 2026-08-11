@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Intelligence feed — public read, developer/Cloud Function writes only
+    // Owner identity invariant: OWNER_EMAIL and OWNER_UID must resolve to the same Firebase Auth user.
+    match /developments/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null
+                   && request.auth.uid == "8LK6JuBjLlSOo6cVCztpfURzlMv1";
+    }
+
+    match /refreshRequests/{docId} {
+      allow read: if request.auth != null
+                  && request.auth.uid == "8LK6JuBjLlSOo6cVCztpfURzlMv1";
+
+      allow create: if request.auth != null
+                    && request.auth.uid == "8LK6JuBjLlSOo6cVCztpfURzlMv1"
+                    && request.resource.data.keys().hasOnly([
+                         "requestedAt",
+                         "requestedBy"
+                       ])
+                    && request.resource.data.requestedBy == request.auth.token.email
+                    && request.resource.data.requestedAt == request.time;
+
+      allow update: if false;  // function bypasses rules; no client updates
+      allow delete: if false;  // cleanup handled by Firestore TTL
+    }
+
+    // Briefings — public showcase read, owner UID-scoped private access.
+    match /briefings/{docId} {
+      allow read: if resource.data.isShowcase == true
+                  || (request.auth != null
+                      && request.auth.uid == resource.data.ownerUid);
+
+      allow create: if request.auth != null
+                    && request.resource.data.ownerUid == request.auth.uid;
+
+      allow update: if request.auth != null
+                    && resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.ownerUid == resource.data.ownerUid;
+
+      allow delete: if false;
+    }
+
+    // Briefing messages inherit parent briefing authorisation.
+    match /briefings/{docId}/messages/{msgId} {
+      allow read: if get(/databases/$(database)/documents/briefings/$(docId)).data.isShowcase == true
+                  || (request.auth != null
+                      && request.auth.uid == get(/databases/$(database)/documents/briefings/$(docId)).data.ownerUid);
+
+      allow write: if request.auth != null
+                   && request.auth.uid == get(/databases/$(database)/documents/briefings/$(docId)).data.ownerUid;
+    }
+
+  }
+}
